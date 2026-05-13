@@ -1,0 +1,88 @@
+WRITE-UP — San Diego Summer Heat: August Near-Surface Temperatures (1850–2014)
+DSC 106 Project 3
+================================================================================
+
+MOTIVATION
+----------
+- TODO
+
+
+DESIGN RATIONALE
+----------------
+- TODO
+
+
+INTERACTION DESIGN
+------------------
+
+1. Time Brush (context strip below main chart)
+
+   Implementation:
+   - A second, shorter SVG renders the full 1850–2014 series at reduced height
+   - A D3 brushX sits on top; dragging updates state.brushExtent and calls draw()
+   - draw() filters allData to the selected range and re-computes scales, axes, and both lines
+   - "brush" event (fires every pixel while dragging) calls draw(0) — no transition, redraws instantly
+   - "end" event calls draw(400) only when clearing, preserving the smooth snap-back animation
+   - A "× Reset zoom" pill appears in the subtitle whenever a brush is active
+   - Clicking reset calls brush.move(null) to clear the highlight and redraws at full range
+
+   Rationale:
+   - At full scale, post-1970 warming acceleration and rising year-to-year variance are visually compressed
+   - Brushing into 1970–2014 stretches those decades across the full chart width
+   - The steepening slope and widening spread become immediately apparent
+   - This pattern is structurally impossible to see in a static view of the whole record
+
+2. Rolling Mean Slider (smoothing window, 3–30 years)
+
+   Implementation:
+   - HTML range input bound to state.window
+   - On every input event, rollingMean() recomputes a centred moving average at the chosen window length
+   - draw() re-renders the orange trend line in real time
+   - The year label next to the slider updates live
+
+   Rationale:
+   - A single fixed window hides competing signals
+   - At 5 yr, Pacific Decadal Oscillation cycles (~10-yr periodicity) appear as regular peaks and troughs
+   - At 20–30 yr, short-term noise is suppressed and the long-term anthropogenic trend is isolated
+   - Giving the user control turns a static design choice into active exploration of signal vs. noise
+
+3. Baseline Period Selector (pre-industrial / mid-century / modern)
+
+   Implementation:
+   - Dropdown bound to state.baseline (year range)
+   - Changing selection recomputes baselineMean() — the mean temperature over the chosen reference window
+   - Every data point is re-expressed as (value − baseline mean), re-zeroing the y-axis
+   - Subtitle updates to reflect the active baseline period
+
+   Rationale:
+   - Anomaly framing is not neutral; the baseline choice defines what counts as "normal"
+   - 1850–1900 (pre-industrial) shows the full magnitude of modern warming (~+1.5 K)
+   - 1981–2010 (WMO standard) shrinks recent values toward zero and surfaces early-century coolness
+   - The interaction makes visible how reference-frame choices shape climate narratives
+
+4. Hover Tooltip (per-year data readout)
+
+   Implementation:
+   - Transparent circles (r = 2.5 px) are placed at every data point
+   - mouseover/mousemove/mouseout events control a fixed-position <div>
+   - On hover: div fades in and shows year, raw temperature (K), and signed anomaly
+   - Hovered dot enlarges to r = 5 px for visual feedback
+
+   Rationale:
+   - Line charts communicate trend and shape but not precise per-year values
+   - Outliers (record highs, cold snaps) are anonymous without labels
+   - Tooltip lets users pinpoint specific historical events (e.g. 1998, 2012 heat spikes)
+   - Bridges the gap between the aggregate pattern and individual data points
+
+
+DATA TRANSFORMATIONS
+--------------------
+- TODO: Filtered to August only (month == 8)
+- TODO: Annual mean of August values per year
+- TODO: Rolling mean computed with a centred window of N years
+- TODO: Anomaly = value minus mean of baseline period
+
+
+DEVELOPMENT PROCESS
+-------------------
+- TODO: Describe team member contributions and time breakdown
