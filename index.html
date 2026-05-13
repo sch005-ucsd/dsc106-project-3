@@ -4,12 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>San Diego Summer Heat — DSC 106</title>
-
-  <!-- D3.js (only plotting library allowed) -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
-
   <style>
-    /* ── Reset & base ────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
@@ -18,7 +14,6 @@
       color: #222;
     }
 
-    /* ── Page layout ─────────────────────────────────────────────── */
     header {
       background: #1a2b45;
       color: #fff;
@@ -33,7 +28,6 @@
       padding: 0 2rem;
     }
 
-    /* ── Controls bar ────────────────────────────────────────────── */
     #controls {
       display: flex;
       align-items: center;
@@ -73,8 +67,7 @@
       min-width: 4ch;
     }
 
-    /* ── Chart card ──────────────────────────────────────────────── */
-    #chart-card {
+    #chart-card, #writeup-card {
       background: #fff;
       border: 1px solid #dde3ec;
       border-radius: 8px;
@@ -105,13 +98,9 @@
     }
     #reset-zoom:hover { background: #d0d9ec; }
 
-    /* Main chart SVG */
     #main-chart { width: 100%; display: block; }
-
-    /* Brush/context SVG sits directly below */
     #brush-chart { width: 100%; display: block; margin-top: 0.5rem; }
 
-    /* ── Tooltip ─────────────────────────────────────────────────── */
     #tooltip {
       position: fixed;
       pointer-events: none;
@@ -127,14 +116,45 @@
     }
     #tooltip.visible { opacity: 1; }
 
-    /* ── Legend ──────────────────────────────────────────────────── */
     .legend { font-size: 0.82rem; }
 
+    #writeup-card h2 {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      color: #1a2b45;
+    }
+    #writeup-card h3 {
+      font-size: 1rem;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: #333;
+    }
+    #writeup-card h4 {
+      font-size: 0.95rem;
+      margin-top: 1.2rem;
+      margin-bottom: 0.4rem;
+      color: #1a2b45;
+    }
+    #writeup-card p {
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: #555;
+      margin-bottom: 0.5rem;
+    }
+    #writeup-card ul {
+      margin-left: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    #writeup-card li {
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: #555;
+      margin-bottom: 0.3rem;
+    }
   </style>
 </head>
 <body>
 
-<!-- ── Header ─────────────────────────────────────────────────────── -->
 <header>
   <h1>San Diego Summer Heat: August Near-Surface Temperatures (1850–2014)</h1>
   <p>
@@ -143,34 +163,27 @@
   </p>
 </header>
 
-<!-- ── Tooltip (single shared instance) ──────────────────────────── -->
 <div id="tooltip"></div>
 
 <main>
 
-  <!-- ── Controls ───────────────────────────────────────────────── -->
   <div id="controls">
-
-    <!-- Baseline period selector -->
     <div class="control-group">
       <label for="baseline-select">Baseline period</label>
       <select id="baseline-select">
-        <option value="1850-1900" selected>1850 – 1900  (pre-industrial)</option>
-        <option value="1950-1980">1950 – 1980  (mid-century)</option>
-        <option value="1981-2010">1981 – 2010  (modern reference)</option>
+        <option value="1850-1900" selected>1850 – 1900 (pre-industrial)</option>
+        <option value="1950-1980">1950 – 1980 (mid-century)</option>
+        <option value="1981-2010">1981 – 2010 (modern reference)</option>
       </select>
     </div>
 
-    <!-- Rolling mean window slider -->
     <div class="control-group">
       <label for="window-slider">Smoothing window</label>
       <input id="window-slider" type="range" min="3" max="30" step="1" value="10" />
       <span id="window-value">10 yr</span>
     </div>
-
   </div>
 
-  <!-- ── Main chart card ─────────────────────────────────────────── -->
   <div id="chart-card">
     <p id="chart-subtitle">
       <span id="subtitle-text"></span>
@@ -180,54 +193,138 @@
     <svg id="brush-chart"></svg>
   </div>
 
+  <div id="writeup-card">
+    <h2>Project Write-up</h2>
+    
+    <h3>Motivation</h3>
+    <p>
+      Our goal is to explore how summer temperatures in San Diego have shifted over a 164-year period. Since August is traditionally a peak summer month, focusing exclusively on August near-surface temperatures isolates the shifting reality of extreme summer heat. By utilizing the CMIP6 CESM2 historical climate model dataset, we can look past short-term weather volatility to observe and understand the long-term anthropogenic climate change trends in a localized, familiar context.
+    </p>
+
+    <h3>Design Rationale</h3>
+    <p>
+      We chose to use a line chart with position on the y-axis as our primary visual encoding for temperature anomalies, as it is the most accurately perceived channel for quantitative data over time. A continuous line mark was selected over individual points or bars to emphasize the temporal trend and continuity of the climate record.
+    </p>
+    <p>
+      To address the heavy noise inherent in annual climate data, we implemented a divergent color scheme, using blue for the volatile annual data and a stark orange for the smoothed rolling mean. Instead of relying on a static plot that might obscure critical patterns, we prioritized interactive dynamic queries. The slider, brush, and dropdown allow the user to actively manipulate the parameters of the visualization, transforming the experience from passively reading a graph to actively discovering how the acceleration of warming becomes apparent when adjusting the signal-to-noise ratio.
+    </p>
+
+    <h3>Interaction Design</h3>
+
+    <h4>1. Time Brush (context strip below main chart)</h4>
+    <p>Implementation:</p>
+    <ul>
+      <li>A second, shorter SVG renders the full 1850–2014 series at reduced height</li>
+      <li>A D3 brushX sits on top; dragging updates state.brushExtent and calls draw()</li>
+      <li>draw() filters allData to the selected range and re-computes scales, axes, and both lines</li>
+      <li>"brush" event (fires every pixel while dragging) calls draw(0) — no transition, redraws instantly</li>
+      <li>"end" event calls draw(400) only when clearing, preserving the smooth snap-back animation</li>
+      <li>A "× Reset zoom" pill appears in the subtitle whenever a brush is active</li>
+      <li>Clicking reset calls brush.move(null) to clear the highlight and redraws at full range</li>
+    </ul>
+    <p>Rationale:</p>
+    <ul>
+      <li>At full scale, post-1970 warming acceleration and rising year-to-year variance are visually compressed</li>
+      <li>Brushing into 1970–2014 stretches those decades across the full chart width</li>
+      <li>The steepening slope and widening spread become immediately apparent</li>
+      <li>This pattern is structurally impossible to see in a static view of the whole record</li>
+    </ul>
+
+    <h4>2. Rolling Mean Slider (smoothing window, 3–30 years)</h4>
+    <p>Implementation:</p>
+    <ul>
+      <li>HTML range input bound to state.window</li>
+      <li>On every input event, rollingMean() recomputes a centred moving average at the chosen window length</li>
+      <li>draw() re-renders the orange trend line in real time</li>
+      <li>The year label next to the slider updates live</li>
+    </ul>
+    <p>Rationale:</p>
+    <ul>
+      <li>A single fixed window hides competing signals</li>
+      <li>At 5 yr, Pacific Decadal Oscillation cycles (~10-yr periodicity) appear as regular peaks and troughs</li>
+      <li>At 20–30 yr, short-term noise is suppressed and the long-term anthropogenic trend is isolated</li>
+      <li>Giving the user control turns a static design choice into active exploration of signal vs. noise</li>
+    </ul>
+
+    <h4>3. Baseline Period Selector (pre-industrial / mid-century / modern)</h4>
+    <p>Implementation:</p>
+    <ul>
+      <li>Dropdown bound to state.baseline (year range)</li>
+      <li>Changing selection recomputes baselineMean() — the mean temperature over the chosen reference window</li>
+      <li>Every data point is re-expressed as (value − baseline mean), re-zeroing the y-axis</li>
+      <li>Subtitle updates to reflect the active baseline period</li>
+    </ul>
+    <p>Rationale:</p>
+    <ul>
+      <li>Anomaly framing is not neutral; the baseline choice defines what counts as "normal"</li>
+      <li>1850–1900 (pre-industrial) shows the full magnitude of modern warming (~+1.5 K)</li>
+      <li>1981–2010 (WMO standard) shrinks recent values toward zero and surfaces early-century coolness</li>
+      <li>The interaction makes visible how reference-frame choices shape climate narratives</li>
+    </ul>
+
+    <h4>4. Hover Tooltip (per-year data readout)</h4>
+    <p>Implementation:</p>
+    <ul>
+      <li>Transparent circles (r = 2.5 px) are placed at every data point</li>
+      <li>mouseover/mousemove/mouseout events control a fixed-position div</li>
+      <li>On hover: div fades in and shows year, raw temperature (K), and signed anomaly</li>
+      <li>Hovered dot enlarges to r = 5 px for visual feedback</li>
+    </ul>
+    <p>Rationale:</p>
+    <ul>
+      <li>Line charts communicate trend and shape but not precise per-year values</li>
+      <li>Outliers (record highs, cold snaps) are anonymous without labels</li>
+      <li>Tooltip lets users pinpoint specific historical events (e.g. 1998, 2012 heat spikes)</li>
+      <li>Bridges the gap between the aggregate pattern and individual data points</li>
+    </ul>
+
+    <h3>Data Transformations</h3>
+    <ul>
+      <li>Filtered the raw CMIP6 NetCDF dataset to isolate the spatial coordinates for San Diego.</li>
+      <li>Filtered the time series to extract only the month of August (month == 8) for each year.</li>
+      <li>Aggregated the data by computing the annual mean of those August values per year.</li>
+      <li>Computed a rolling mean using a dynamically adjustable, centred window of N years (controlled via slider) to smooth year-to-year variance.</li>
+      <li>Calculated a relative temperature anomaly by subtracting the mean of a user-selected baseline period from each year's absolute temperature, mapping the data to a zero-centered scale.</li>
+    </ul>
+
+    <h3>Development Process</h3>
+    <ul>
+      <li>The project required approximately 35 people-hours of collaborative effort across our team.</li>
+      <li>Kristen handled the initial data pipeline, extracting the San Diego subset from the CMIP6 model output and converting the NetCDF time series into a clean CSV format.</li>
+      <li>Our second team member built the core D3.js architecture, setting up the SVG coordinate system, linear scales, line generators, and the foundation for the brush zoom interaction.</li>
+      <li>I focused on the final UI polish, debugging the y-axis scales to correctly display relative anomalies rather than absolute Kelvin, refining the tooltip's transition states, and completing the final documentation and video walkthrough.</li>
+      <li>The most time-consuming aspect of development was managing the D3 state updates, specifically ensuring the chart transitioned smoothly without lag when the brush extent zoom and the rolling mean window were adjusted simultaneously.</li>
+    </ul>
+  </div>
+
 </main>
 
-<!-- ── D3 implementation ───────────────────────────────────────────── -->
 <script>
-// ================================================================
-//  CONFIGURATION
-// ================================================================
 const CONFIG = {
-  // Dimensions
-  margin:      { top: 20, right: 30, bottom: 30, left: 55 },
-  brushHeight: 60,   // height of the context/brush strip
-
-  // Visual
-  lineColor:    "steelblue",
-  meanColor:    "darkorange",
-  lineOpacity:  0.45,
-  lineWidth:    1.5,
-  meanWidth:    3,
-  dotRadius:    2.5,
-
-  // Data file (export from Python notebook)
-  dataPath: "data/sd_august.csv",   // columns: year, temperature
+  margin: { top: 20, right: 30, bottom: 30, left: 55 },
+  brushHeight: 60,
+  lineColor: "steelblue",
+  meanColor: "darkorange",
+  lineOpacity: 0.45,
+  lineWidth: 1.5,
+  meanWidth: 3,
+  dotRadius: 2.5,
+  dataPath: "data/sd_august.csv",
 };
 
-// ================================================================
-//  STATE  (mutated by controls and brush)
-// ================================================================
 const state = {
-  baseline:    [1850, 1900],
-  window:      10,
-  brushExtent: null,   // [yearMin, yearMax] or null = full range
+  baseline: [1850, 1900],
+  window: 10,
+  brushExtent: null,
 };
 
-// ================================================================
-//  GLOBALS  (set after data loads)
-// ================================================================
-let allData    = [];   // [{year, temperature}]
+let allData = [];
 let mainSvg, brushSvg;
 let xMain, yMain, xBrush, yBrush;
 let xAxisMain, yAxisMain;
 let mainG, brushG;
-let brush;   // d3 brush instance — kept global for programmatic clear
+let brush;
 
-// ================================================================
-//  HELPERS
-// ================================================================
-
-/** Compute rolling mean (centred window) */
 function rollingMean(data, window) {
   const half = Math.floor(window / 2);
   return data.map((d, i) => {
@@ -242,7 +339,6 @@ function rollingMean(data, window) {
   });
 }
 
-/** Compute baseline mean for the selected period */
 function baselineMean(data, [y0, y1]) {
   return d3.mean(
     data.filter(d => d.year >= y0 && d.year <= y1),
@@ -250,7 +346,6 @@ function baselineMean(data, [y0, y1]) {
   );
 }
 
-/** Update the subtitle text and reset-zoom visibility */
 function updateSubtitle() {
   const [b0, b1] = state.baseline;
   d3.select("#subtitle-text").text(
@@ -260,44 +355,33 @@ function updateSubtitle() {
   btn.style.display = state.brushExtent ? "inline-block" : "none";
 }
 
-// ================================================================
-//  DRAW
-// ================================================================
-
 function draw(dur = 400) {
-  // ── 1. filter to brush extent ──────────────────────────────────
   const visible = state.brushExtent
     ? allData.filter(d => d.year >= state.brushExtent[0] && d.year <= state.brushExtent[1])
     : allData;
 
-  // ── 2. compute anomaly ─────────────────────────────────────────
   const bMean = baselineMean(allData, state.baseline);
   const plotData = visible.map(d => ({
-    year:        d.year,
+    year: d.year,
     temperature: d.temperature,
-    anomaly:     d.temperature - bMean,
+    anomaly: d.temperature - bMean,
   }));
 
-  // ── 3. rolling mean ────────────────────────────────────────────
   const smoothed = rollingMean(plotData, state.window);
 
-  // ── 4. update scales ───────────────────────────────────────────
   xMain.domain(d3.extent(plotData, d => d.year));
   yMain.domain([
     d3.min(plotData, d => d.anomaly) - 0.3,
     d3.max(plotData, d => d.anomaly) + 0.3,
   ]);
 
-  // ── 5. update axes ─────────────────────────────────────────────
   mainG.select(".x-axis").transition().duration(dur).call(xAxisMain);
   mainG.select(".y-axis").transition().duration(dur).call(yAxisMain);
 
-  // ── 6. zero baseline ──────────────────────────────────────────
   mainG.select(".zero-line")
     .transition().duration(dur)
     .attr("y1", yMain(0)).attr("y2", yMain(0));
 
-  // ── 7. raw temperature line ───────────────────────────────────
   const lineFn = d3.line()
     .x(d => xMain(d.year))
     .y(d => yMain(d.anomaly))
@@ -308,7 +392,6 @@ function draw(dur = 400) {
     .transition().duration(dur)
     .attr("d", lineFn);
 
-  // ── 8. dots (for tooltip hover) ───────────────────────────────
   const dots = mainG.select(".dots-group")
     .selectAll("circle")
     .data(plotData, d => d.year);
@@ -323,7 +406,6 @@ function draw(dur = 400) {
 
   dots.exit().remove();
 
-  // ── 9. rolling mean line ──────────────────────────────────────
   const meanFn = d3.line()
     .x(d => xMain(d.year))
     .y(d => yMain(d.mean - bMean))
@@ -337,9 +419,6 @@ function draw(dur = 400) {
   updateSubtitle();
 }
 
-// ================================================================
-//  TOOLTIP
-// ================================================================
 function attachTooltip() {
   const tooltip = d3.select("#tooltip");
 
@@ -368,14 +447,10 @@ function attachTooltip() {
     });
 }
 
-// ================================================================
-//  BRUSH (context strip)
-// ================================================================
 function initBrush(fullExtent) {
   brush = d3.brushX()
     .extent([[0, 0], [xBrush.range()[1], CONFIG.brushHeight - 15]])
     .on("brush", function(event) {
-      // Called on every pixel of drag — use dur=0 to avoid transition queue lag
       if (event.selection) {
         state.brushExtent = event.selection.map(xBrush.invert).map(Math.round);
         draw(0);
@@ -393,7 +468,6 @@ function initBrush(fullExtent) {
       attachTooltip();
     });
 
-  // draw context line
   const contextLine = d3.line()
     .x(d => xBrush(d.year))
     .y(d => yBrush(d.temperature));
@@ -412,20 +486,15 @@ function initBrush(fullExtent) {
     .call(brush);
 }
 
-// ================================================================
-//  INIT  (called once after data loads)
-// ================================================================
 function init(data) {
   allData = data;
 
-  // ── sizing ────────────────────────────────────────────────────
-  const cardWidth  = document.getElementById("chart-card").clientWidth - 48;
+  const cardWidth = document.getElementById("chart-card").clientWidth - 48;
   const { margin, brushHeight } = CONFIG;
   const mainHeight = Math.round(cardWidth * 0.42);
   const innerW = cardWidth - margin.left - margin.right;
-  const innerH = mainHeight - margin.top  - margin.bottom;
+  const innerH = mainHeight - margin.top - margin.bottom;
 
-  // ── main SVG ──────────────────────────────────────────────────
   mainSvg = d3.select("#main-chart")
     .attr("viewBox", `0 0 ${cardWidth} ${mainHeight}`)
     .attr("height", mainHeight);
@@ -433,11 +502,9 @@ function init(data) {
   mainG = mainSvg.append("g")
     .attr("transform", `translate(${margin.left},${margin.top})`);
 
-  // scales
   xMain = d3.scaleLinear().range([0, innerW]);
   yMain = d3.scaleLinear().range([innerH, 0]);
 
-  // axes
   xAxisMain = d3.axisBottom(xMain).tickFormat(d3.format("d")).ticks(10);
   yAxisMain = d3.axisLeft(yMain).ticks(6)
     .tickFormat(d => (d >= 0 ? "+" : "") + d.toFixed(1) + " K");
@@ -446,7 +513,6 @@ function init(data) {
     .attr("transform", `translate(0,${innerH})`);
   mainG.append("g").attr("class", "y-axis");
 
-  // y-axis label
   mainG.append("text")
     .attr("transform", "rotate(-90)")
     .attr("y", -margin.left + 12)
@@ -456,14 +522,12 @@ function init(data) {
     .attr("fill", "#555")
     .text("Temperature Anomaly [K]");
 
-  // zero baseline
   mainG.append("line")
     .attr("class", "zero-line")
     .attr("x1", 0).attr("x2", innerW)
     .attr("stroke", "#888").attr("stroke-width", 1)
     .attr("stroke-dasharray", "4 3").attr("opacity", 0.7);
 
-  // path elements (drawn in draw())
   mainG.append("path").attr("class", "raw-line")
     .attr("fill", "none")
     .attr("stroke", CONFIG.lineColor)
@@ -477,14 +541,13 @@ function init(data) {
     .attr("stroke", CONFIG.meanColor)
     .attr("stroke-width", CONFIG.meanWidth);
 
-  // legend
   const legend = mainG.append("g")
     .attr("class", "legend")
     .attr("transform", `translate(${innerW - 180}, 4)`);
 
   [
     { color: CONFIG.lineColor, label: "August Temperature", opacity: CONFIG.lineOpacity + 0.2 },
-    { color: CONFIG.meanColor, label: `Rolling Mean`,       opacity: 1 },
+    { color: CONFIG.meanColor, label: `Rolling Mean`, opacity: 1 },
   ].forEach(({ color, label, opacity }, i) => {
     const row = legend.append("g").attr("transform", `translate(0, ${i * 18})`);
     row.append("line")
@@ -497,7 +560,6 @@ function init(data) {
       .text(label);
   });
 
-  // ── brush SVG ─────────────────────────────────────────────────
   const brushSvgHeight = brushHeight + margin.bottom;
   brushSvg = d3.select("#brush-chart")
     .attr("viewBox", `0 0 ${cardWidth} ${brushSvgHeight}`)
@@ -519,18 +581,14 @@ function init(data) {
 
   initBrush(d3.extent(allData, d => d.year));
 
-  // ── initial draw ──────────────────────────────────────────────
   draw();
   attachTooltip();
 }
 
-// ================================================================
-//  CONTROLS
-// ================================================================
 document.getElementById("reset-zoom").addEventListener("click", function(e) {
   e.preventDefault();
   state.brushExtent = null;
-  brushG.select(".brush").call(brush.move, null);  // clear brush highlight visually
+  brushG.select(".brush").call(brush.move, null);
   draw(400);
   attachTooltip();
 });
@@ -549,11 +607,8 @@ d3.select("#window-slider").on("input", function() {
   attachTooltip();
 });
 
-// ================================================================
-//  LOAD DATA & KICK OFF
-// ================================================================
 d3.csv(CONFIG.dataPath, d => ({
-  year:        +d.year,
+  year: +d.year,
   temperature: +d.temperature,
 })).then(data => {
   init(data);
